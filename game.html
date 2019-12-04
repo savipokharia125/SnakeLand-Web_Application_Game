@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { background: orange;  align-items: center; justify-content: center; color: aliceblue;font-size: 40px;}
+    canvas { border: 6px solid white; align-self:  center;}
+      .sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+     
+.colStyle
+      {
+          width:72%;
+         
+      }
+     
+      .colbgStyle
+      {
+          align-self: center;
+          color: azure;
+          font-size: 36px;
+          font-weight: 500;
+          width: 35%;
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+         
+      }
+
+#main {
+  transition: margin-left .5s;
+  padding: 5px;
+}
+
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}
+
+  </style>
+    
+    
+</head>
+<body>
+    <div id="mySidenav" class="sidenav">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+<a href="#">WelCome to</a>
+        <a href="#" style="font: 36px;align-self: center;">SnakeLand</a>
+        <a href="#"></a>
+<a href="#">P:Pause</a>
+ <a href="#">R:Resume</a>
+  <a href="#">Melon provides bonus</a>
+ 
+</div>
+
+<div id="main">
+ 
+  <span style="font-size:30px;cursor:pointer;position: fixed;" onclick="openNav()">&#9776; Rules</span>
+</div>
+<table width="100%" style="background-image: url(snake.png);background-position: right;background-repeat: no-repeat;">
+    <tr>
+        <td width="9%" style=" ">
+        </td>
+        <td class="colStyle" align="center">
+  <div style="margin-top: 20px;">
+<canvas width="800" height="640" id="game" ></canvas>
+    </div>    
+        </td>
+        <td class="colbgStyle">
+
+ <div id="hscore"></div>
+<div id="score"></div>
+        </td>
+       </tr>
+    </table>
+<script>
+    var c=0;
+    var keyPressed='0';
+    var time=0;
+    var isMushroom=true;
+    var isCorn=true;
+    var counter1=0;
+    var counter2=0;
+   
+    //load audio files
+    let dead = new Audio();
+    let bonus = new Audio();
+    let eat = new Audio();
+    dead.src = "dead.mp3";
+    bonus.src = "eat.mp3";
+    eat.src =    "up.mp3";
+   
+   
+    //load images
+const corn = new Image();
+corn.src = "corn.png";    
+const mushroom = new Image();
+mushroom.src = "corn.png";
+const foodImg = new Image();
+foodImg.src = "food.png";    
+ 
+   
+   
+    //image positions of snake
+const snakeRight = new Image();
+snakeRight.src = "snakeRight.png";
+    snakeRight.height="30px";
+    snakeRight.width="30px";
+   
+    const snakeLeft = new Image();
+snakeLeft.src = "snakeLeft.png";
+    snakeLeft.height="16px";
+    snakeLeft.width="16px";
+   
+    const snakeUp = new Image();
+snakeUp.src = "snakeUp.png";
+    snakeUp.height="16px";
+    snakeUp.width="16px";
+   
+    const snakeDown = new Image();
+snakeDown.src = "snakeDown.png";
+    snakeDown.height="16px";
+    snakeDown.width="16px";
+   
+   
+   
+//function for displaying rules    
+function openNav() {
+  document.getElementById("mySidenav").style.width = "250px";
+  document.getElementById("main").style.marginLeft = "250px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+  document.getElementById("main").style.marginLeft= "0";
+}
+
+   
+    //create board
+    var score=document.getElementById('score');
+    var hs=document.getElementById('hscore');
+    var canvas = document.getElementById('game');
+    var context = canvas.getContext('2d');
+   
+
+   
+var grid = 20;
+var count = 0;
+    var isPaused=true;
+    var lastMovement='random';
+ var c=0;
+ 
+   var hScore=gethScore();
+   
+   
+    //function to display score
+    function displayScore()
+    {
+       if(c>hScore)
+         {
+           
+             storehScore(c);
+         }
+     score.innerHTML="Score : "+c;  
+    }
+   
+   
+   
+    //function to display highScore
+    function displayhighScore()
+    {
+       
+        hs.innerHTML="Beat the Score"+"<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+hScore+"<br><br><br>";
+
+    }
+ 
+   
+    displayhighScore();
+    displayScore();
+   
+   
+    //store highScore
+    function storehScore(hScore)
+    {
+    localStorage.hScore=JSON.stringify(hScore);
+    }
+   
+   
+    //get highScore from localStorage
+    function gethScore()
+    {
+       if(!localStorage.hScore)
+           {
+            return 0;  
+           }
+        else
+            {
+        return JSON.parse(localStorage.hScore);
+            }
+    }
+   
+   //storeCells of snake
+    function storeCells(score)
+    {
+        
+        localStorage.storeCellLocal=JSON.stringify(snake);
+         localStorage.storeScoreLocal=JSON.stringify(c);
+        
+    }
+    
+     function storeAppleCords()
+    {
+        
+        localStorage.storeLocalAppleX=JSON.stringify(apple.x);
+         localStorage.storeLocalAppleY=JSON.stringify(apple.y);
+        
+    }
+   
+   //get cells of snake
+    function getStoreCells()
+    {
+     if(!localStorage.storeCellLocal)
+           {
+  localStorage.storeCellLocal = JSON.stringify([]);  
+           }
+        else
+            {
+   
+      snake = JSON.parse(localStorage.storeCellLocal);
+      c = JSON.parse(localStorage.storeScoreLocal);
+                drawSnake();
+                displayScore();
+            }
+    }
+   
+  var storeCellsArr=
+        {
+            cells : [{x:180 , y:180} , {x:160 , y:180}, {x:140 , y:180}] ,
+        }  
+   
+    //create snake position
+var snake =
+{
+  x : 180, //160
+  y : 180 ,
+ cells : [{x:480 , y:380}] ,
+   
+};
+
+   
+    //create food position
+var apple = {
+  x: Math.floor((Math.random() * 40) + 0)*20,
+  y: Math.floor((Math.random() * 32) + 0)*20
+};
+   
+    var mu = {
+  x: Math.floor((Math.random() * 40) + 0)*20,
+  y: Math.floor((Math.random() * 32) + 0)*20
+};
+   
+    var co = {
+  x: Math.floor((Math.random() * 40) + 0)*20,
+  y: Math.floor((Math.random() * 32) + 0)*20
+};
+
+   
+   
+   
+    //function for game over
+function gameOver(){
+     alert("Your score was "+c+" :)"); 
+    time=0;
+  context.clearRect(0, 0, canvas.width,canvas.height);// Clear the Canvas
+
+ snake.cells = [{x:180 , y:180} , {x:160 , y:180}, {x:140 , y:180}];
+    dead.play();
+  context.fillStyle = 'white';
+  context.font = "30px Arial";
+  context.textAlign = "center";
+ context.fillText("Game Over..Press Arrow key to start again" , canvas.width/2, canvas.height/2);
+ hScore=gethScore();
+    isPaused=true;
+    keyPressed="random";
+    storeCells(0);
+    localStorage.storeScoreLocal=JSON.stringify(0);
+}
+   
+   
+   
+// draw apple
+function drawApple()
+{
+ 
+context.drawImage(foodImg, apple.x, apple.y, grid+2, grid+2);
+  //context.fillRect(apple.x, apple.y, grid-1, grid-1); //(x,y,width,height)
+}
+   
+   
+   
+    //draw food
+    function drawCorn()
+ {
+context.drawImage(corn, co.x, co.y, grid+5, grid+5);
+ 
+}
+   
+    function drawMushroom()
+{
+context.drawImage(mushroom, mu.x, mu.y, grid+5, grid+5);
+ 
+}
+   
+    drawApple();
+   
+//draw snake
+function drawSnake()
+{
+   
+    var my_gradient=context.createLinearGradient(0, 0, 800, 645);
+    var pat = context.createPattern(snakeRight, 'no-repeat');
+    my_gradient.addColorStop(0, "blue");
+    my_gradient.addColorStop(0.25, "darkgreen");
+    my_gradient.addColorStop(0.5, "green");
+    my_gradient.addColorStop(0.75, "lightgreen");
+    my_gradient.addColorStop(1, "yellow");
+   
+
+   context.fillStyle = 'white';
+    context.fillRect(snake.cells[0].x, snake.cells[0].y, grid-1, grid-1);
+    
+     context.fillStyle = my_gradient;
+  for(let i=1 ; i<snake.cells.length ; i++)
+    context.fillRect(snake.cells[i].x, snake.cells[i].y, grid-1, grid-1);
+}
+drawSnake();  
+
+   
+   
+    //check foodOnsnake
+function checkAppleIsOnSnake(){
+   
+   for(let i = 0 ; i < snake.cells.length ; i++){
+    if( apple.x != snake.cells[i].x && apple.y != snake.cells[i].y){
+      return true ;
+    }
+  }
+}
+   
+    function checkMushroomIsOnSnake(){
+   if(mu.x==snake.cells[0].x&&mu.y==snake.cells[0].y)
+      {counter1=1000;
+          return true;}
+    }
+
+    function checkCornIsOnSnake(){
+   if(co.x==snake.cells[0].x&&co.y==snake.cells[0].y)
+   {counter2=1000;
+       return true;}
+    }
+ 
+       
+ //movement of snake
+   
+function moveSnake( dx , dy)
+{
+ 
+    snake.x += dx;
+    snake.y += dy;  
+   if(snake.x==apple.x&&snake.y==apple.y)
+       {
+         
+           apple.x=Math.floor((Math.random() * 40) + 0)*20;
+           apple.y=Math.floor((Math.random() * 32) + 0)*20;
+           
+           if( checkAppleIsOnSnake() ){          //when score is 50, get bonus
+         snake.cells.push({x:snake.cells.x+grid,y: snake.cells.y});
+               
+               c+=5;
+                 eat.play();
+               displayScore();
+              if(c>hScore)
+                   {
+                       
+                       
+                       storehScore(c);
+                         hScore=gethScore();
+                       console.log(hScore);
+                       displayhighScore();
+                       //storeAppleCords();
+                   }
+           }
+       }
+           
+           if(snake.x==mu.x&&snake.y==mu.y&&isMushroom==true&&counter1>1&&counter1<51)
+               {
+                    snake.cells.push({x:snake.cells.x+grid,y: snake.cells.y});
+                   c+=10;
+                     bonus.play();
+                   if(c>hScore)
+                   {
+                     
+                       
+                       storehScore(c);
+                      hScore=gethScore();
+                       console.log(hScore);
+                       displayhighScore();
+                   }
+                   isMushroom=false;
+                    mu.x=Math.floor((Math.random() * 40) + 0)*20;
+                    mu.y=Math.floor((Math.random() * 32) + 0)*20;
+               }
+           
+           if(snake.x==mu.x&&snake.y==mu.y&&isCorn==true&&counter2>1&&counter2<51)
+               {
+                   snake.cells.push({x:snake.cells.x+grid,y: snake.cells.y});
+                   c+=20;
+                       bonus.play();
+                   isCorn=false;
+                   if(c>hScore)
+                   {
+                       storehScore(c);
+                       hScore=gethScore();
+                       displayhighScore();
+                   }
+            co.x=Math.floor((Math.random() * 40) + 0)*20;
+           co.y=Math.floor((Math.random() * 32) + 0)*20;
+               }
+            displayScore();
+            displayhighScore();
+       
+   
+    if(snake.x<800&&snake.y<=620&&snake.y>=0&&snake.x>=0)
+        {
+    snake.cells.unshift({x: snake.x , y: snake.y}) ; // Insert at 0th position
+ snake.cells.pop();  // remove the last element
+  drawSnake();
+        }
+    else
+       {
+          //alert('yes');
+        gameOver();
+         
+         snake =
+{
+  x : 160,
+  y : 160 ,
+ cells : [{x:160 , y:160} , {x:140 , y:160}, {x:120 , y:160}] ,
+};
+  drawSnake();
+        c=0;
+        displayScore();
+           displayhighScore();
+           return ;}
+       for(var i=1;i<snake.cells.length;i++)
+        {
+            if(snake.cells[0].x==snake.cells[i].x&&snake.cells[0].y==snake.cells[i].y)
+              {
+                 
+                  gameOver();
+               
+                   
+         snake =
+{
+  x : 160,
+  y : 160 ,
+ cells : [{x:160 , y:160} , {x:140 , y:160}, {x:120 , y:160}] ,
+};
+  drawSnake();
+                  
+               c=0;
+               displayScore();
+                  displayhighScore();
+           return ;
+              }
+        }
+}
+
+// listen to keyboard events to move the snake
+document.addEventListener('keydown', function(e)
+{
+  let dx , dy ;
+    isPaused=false;
+   
+  // left arrow key
+  if (e.keyCode == 37  && lastMovement!='right')
+  {
+    dx = -grid;
+    dy = 0;
+      lastMovement='left';
+       keyPressed=37;
+  }
+   // up arrow key
+  else if (e.keyCode == 38 && lastMovement!='down')
+  {
+    dy = -grid;
+    dx = 0;
+       keyPressed=38;
+      lastMovement='up';
+  }
+   // right arrow key
+  else if (e.keyCode == 39 && lastMovement!='left')
+  {
+    dx = grid;
+    dy = 0;
+       keyPressed=39;
+      lastMovement='right';
+  }
+   // down arrow key
+  else if (e.keyCode == 40 && lastMovement!='up')
+  {
+    dy = grid;
+    dx = 0;
+       keyPressed=40;
+     lastMovement='down'
+  }
+    else if (e.keyCode == 80 )
+        {
+             isPaused=true;
+            storeCellsArr.cells.splice(0,storeCellsArr.cells.length-1);
+            storeCellsArr.cells.pop();
+           for(var i=0;i<snake.cells.length;i++)
+               {
+                   storeCellsArr.cells.push({x:snake.cells[i].x , y: snake.cells[i].y});
+                   
+               }
+            //console.log("score=",c);
+            storeCells(score);
+            return;
+        }
+    else if (e.keyCode == 82 )
+        {
+           isPaused=false;
+            return;
+        }
+
+    else
+        {
+            return;
+        }
+   
+    context.clearRect(0, 0, canvas.width,canvas.height);// Clear the Canvas
+  moveSnake(dx,dy);
+  drawApple();
+});
+   
+   
+   getStoreCells();
+   
+    function drawGame()
+{
+if(isPaused==false)
+{
+    time++;    //variable used for coping with bonus, time variable will count the seconds after which accordingly bonus                  will shown up
+   
+context.clearRect(0, 0, canvas.width,canvas.height);
+drawSnake();
+drawApple();
+   
+    if(time%70==0&&time%210!=0)    //condition for adding bonus
+    {
+        if(isMushroom!=false)
+        drawMushroom();
+        counter1++;
+        isMushroom=true;
+        if(counter1>0&&counter1<50)
+            time--;
+        else
+        {
+            counter1=0;
+        }
+    }
+
+let dx = 0  , dy = 0  ;
+if(lastMovement.localeCompare("left")==0)
+{
+dx = -grid;
+dy=0;
+}
+if(lastMovement.localeCompare("right")==0)
+{
+dx = grid;
+dy=0;
+}
+if(lastMovement.localeCompare("down")==0)
+{
+dy = grid;
+dx=0;
+}
+if(lastMovement.localeCompare("up")==0)
+{
+dy = -grid;
+dx=0;
+}
+moveSnake(dx,dy);
+  drawApple();
+  }
+}
+
+setInterval(drawGame,150);
+   
+</script>
+</body>
+</html>
